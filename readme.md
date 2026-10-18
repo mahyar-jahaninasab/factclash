@@ -18,4 +18,7 @@ The main three source of contradictions are:
 - Retrieval Error: The retrieval mechanism actually retrieved False information that can potentially cause contradiction with True information that is retrieved. 
 
 
+## Status
+
+The project is in the initial phase. 
 
