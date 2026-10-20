@@ -22,3 +22,5 @@ The main three source of contradictions are:
 
 The project is in the initial phase. 
 
+
+## Types of contradiciton
