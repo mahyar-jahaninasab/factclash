@@ -24,3 +24,16 @@ The project is in the initial phase.
 
 
 ## Types of contradiciton
+
+For more information about the type of contradictions, read [docs/contradictions.md](docs/contradictions.md).
+
+
+## v0 scope 
+
+In scope: ``Strict Contraction`` and ``Quantification Contradiction`` as they can be fully automated using standard NLP
+
+Out Scope: 
+- ``hybrid pipeline`` : Temporal Contradiction and Contrary Contradiction
+- ``Need LLM``: Lexical Contradiction and Pragmatic Contradiction
+
+

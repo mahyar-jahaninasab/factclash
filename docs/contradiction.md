@@ -107,13 +107,3 @@ These sentences do not break any rules of grammar or explicit dictionary definit
 • Document B: "Patient's documented pulse rate is 0 bpm (asystole)."
 ```
 > **Pragmatic Clash**: A person cannot be conscious and actively speaking with a heart rate of zero.
-
-
-## v0 scope 
-
-In scope: ``Strict Contraction`` and ``Quantification Contradiction`` as they can be fully automated using standard NLP
-
-Out Scope: 
-- ``hybrid pipeline`` : Temporal Contradiction and Contrary Contradiction
-- ``Need LLM``: Lexical Contradiction and Pragmatic Contradiction
-
