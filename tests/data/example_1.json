@@ -1,0 +1,40 @@
+{
+  "context_sources": [
+    {
+      "id": "ctx_01",
+      "source": "prompt",
+      "context": "Since server srv-prod-01 is running, why are you reporting that SSL Certificate #402 IS NOT VALID?"
+    },
+    {
+      "id": "ctx_02",
+      "source": "retrieval",
+      "context": "Server srv-prod-01 IS NOT RUNNING. (System State: Terminated). SSL Certificate #402 IS VALID (Expiration: 90 days remaining).",
+      "metadata": {
+        "document_id": "doc_live_telemetry_2026",
+        "description": "Live Telemetry Snapshot",
+        "query": "RAG retrieval for server status and certificate verification",
+        "timestamp": "2026-10-21T09:30:00Z",
+        "retrieval_score": 0.88
+      }
+    },
+    {
+      "id": "ctx_03",
+      "source": "searched",
+      "context": "Public Cloud Incident #8810: Server srv-prod-01 taken offline for scheduled emergency patching.",
+      "metadata": {
+        "document_id": "search_res_8810",
+        "description": "Public Cloud Incident Log",
+        "query": "srv-prod-01 current status incident log"
+      }
+    },
+    {
+      "id": "ctx_04",
+      "source": "generated",
+      "context": "Assistant prior response: Server srv-prod-01 IS RUNNING.",
+      "metadata": {
+        "turn_number": 1,
+        "role": "assistant"
+      }
+    }
+  ]
+}
