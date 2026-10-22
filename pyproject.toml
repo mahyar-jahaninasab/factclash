@@ -1,0 +1,23 @@
+[project]
+name = "factclash"
+version = "0.1.0"
+description = "Classifying contradictory context that can increase hallucination and resolving them"
+readme = "README.md"
+authors = [
+    { email = "jahaninasab.mahyar@gmail.com" }
+]
+requires-python = ">=3.12"
+dependencies = []
+
+[project.scripts]
+factclash = "factclash:main"
+
+[build-system]
+requires = ["uv_build>=0.12.13,<0.13.0"]
+build-backend = "uv_build"
+
+[dependency-groups]
+dev = [
+    "pytest>=9.1.1",
+    "ruff>=0.17.1",
+]
