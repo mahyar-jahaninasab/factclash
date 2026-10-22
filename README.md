@@ -9,6 +9,28 @@ The main three source of contradictions are:
 - Change of policy within a company. For instance in a certain timestamp the policy of the company was X but now it turned into Y for some certain conditions 
 - Retrieval Error: The retrieval mechanism actually retrieved False information that can potentially cause contradiction with True information that is retrieved. 
 
+## Quick start
+
+```shell
+#Clone
+git clone https://github.com/mahyar-jahaninasab/factclash.git
+
+# Install dependencies
+uv sync --dev
+
+# Run tests
+uv run pytest tests/
+
+```
+
+## Development 
+
+```shell
+uvx pre-commit install
+uvx pre-commit run
+
+```
+
 
 ## Status
 
