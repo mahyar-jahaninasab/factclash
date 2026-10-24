@@ -1,8 +1,7 @@
 import pytest 
-from factclash.contradictions.schemas import SourceContext
-from uuid import uuid4
-from pydantic_core._pydantic_core import ValidationError
-
+from factclash.contradictions.schemas import ContextSource
+from uuid import UUID, uuid4
+from pydantic_core import ValidationError
 
 def test_accept_prompt_fields():
     data = {
@@ -11,7 +10,7 @@ def test_accept_prompt_fields():
           "context": ["Since server srv-prod-01 is running, why are you reporting that SSL Certificate #402 IS NOT VALID?"]
         }
     
-    pydantic_model = SourceContext.model_validate(data) 
+    pydantic_model = ContextSource.model_validate(data) 
 
     assert pydantic_model.id == data["id"]
     assert pydantic_model.source.value == data["source"]
@@ -28,7 +27,7 @@ def test_accept_search_fields():
             "prompt": "srv-prod-01 current status incident log"}
     }
     
-    pydantic_model = SourceContext.model_validate(data) 
+    pydantic_model = ContextSource.model_validate(data) 
 
     assert pydantic_model.id == data["id"]
     assert pydantic_model.source.value  == data["source"]
@@ -50,7 +49,7 @@ def test_accept_retrieval_fields():
             }
     }
     
-    pydantic_model = SourceContext.model_validate(data) 
+    pydantic_model = ContextSource.model_validate(data) 
 
     assert pydantic_model.id == data["id"]
     assert pydantic_model.source.value  == data["source"]
@@ -70,7 +69,7 @@ def test_accept_generation_fields():
       }
     }
     
-    pydantic_model = SourceContext.model_validate(data) 
+    pydantic_model = ContextSource.model_validate(data) 
 
     assert pydantic_model.id == data["id"]
     assert pydantic_model.source.value  == data["source"]
@@ -86,7 +85,17 @@ def test_str_context_fields():
         }
 
     with pytest.raises(ValidationError):
-        SourceContext.model_validate(data) 
+        ContextSource.model_validate(data) 
 
 
+def test_accept_no_id_fields():
+    data = {
+          "source": "prompt",
+          "context": ["Since server srv-prod-01 is running, why are you reporting that SSL Certificate #402 IS NOT VALID?"]
+        }
+    
+    pydantic_model = ContextSource.model_validate(data) 
 
+    assert isinstance(pydantic_model.id, UUID)
+    assert pydantic_model.source.value == data["source"]
+    assert pydantic_model.context == data["context"]
