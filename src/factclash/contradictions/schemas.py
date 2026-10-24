@@ -1,12 +1,12 @@
 from enum import Enum
-from typing import Optional
+from typing import Optional, Union
 from uuid import UUID
 import uuid
 
 from pydantic import BaseModel, Field
 
 
-class ContradictionsType(Enum):
+class ContradictionType(Enum):
     """Enumeration representing different types of logical or semantic contradictions."""
     STRICT = "STRICT"
     CONTRARY = "CONTRARY"
@@ -16,16 +16,16 @@ class ContradictionsType(Enum):
     PRAGMATIC = "PRAGMATIC"
 
 
-class ContextSource(Enum):
+class SourceType(Enum):
     """Enumeration representing the origin or source type of the context."""
-    retrieval = "retrieval"
-    search = "search"
-    generation = "generation"
-    prompt = "prompt"
+    RETRIEVAL = "retrieval"
+    SEARCH = "search"
+    GENERATION = "generation"
+    PROMPT = "prompt"
 
 
-class SourceMetadata(BaseModel):
-    """Metadata associated with a general information source."""
+class BaseSourceMetadata(BaseModel):
+    """Base metadata associated with an information source."""
     
     id: Optional[str] = Field(
         default=None, 
@@ -49,8 +49,8 @@ class SourceMetadata(BaseModel):
     )   
 
 
-class GenerationMetadata(SourceMetadata):
-    """Metadata specific to generated context, inheriting from SourceMetadata."""
+class GenerationSourceMetadata(BaseSourceMetadata):
+    """Metadata specific to generated context, extending BaseSourceMetadata."""
     
     turn_number: int = Field(
         ..., 
@@ -58,25 +58,31 @@ class GenerationMetadata(SourceMetadata):
     )
 
 
-class ContextSource(BaseModel):
+class ContextBlock(BaseModel):
     """Container representing a source context block and its associated metadata."""
     
     id: UUID = Field(
         default_factory=uuid.uuid4, 
         description="Unique identifier (UUID) for this source context record."
     )
-    source: ContextSource = Field(
+    source_type: SourceType = Field(
         ..., 
         description="The origin or category of the information source."
     )
-    context: list[str] = Field(
+    passages: list[str] = Field(
         ..., 
         description="List of text chunks or passages used for contradiction analysis."
     )
-    metadata: Optional[SourceMetadata | GenerationMetadata] = Field(
+    metadata: Optional[Union[BaseSourceMetadata, GenerationSourceMetadata]] = Field(
         default=None, 
         description="Additional structured metadata providing context details, origin, or generation turn information."
     )
 
-class ContextSources(BaseModel):
-    context_sources: list[ContextSource] = Field(..., description="list of context source for contradiction detection pipeline")
+
+class ContextBlockCollection(BaseModel):
+    """Wrapper collection for multiple context blocks evaluated in the pipeline."""
+    
+    blocks: list[ContextBlock] = Field(
+        ..., 
+        description="List of context sources for the contradiction detection pipeline."
+    )
