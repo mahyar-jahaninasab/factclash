@@ -1,7 +1,7 @@
 import json 
 
 
-file_path = "projects/factclash/tests/data/"
+file_path = "tests/data/"
 
 def load_json_file(file_path, n):
     file_name = f"{file_path}example_{n}.json"

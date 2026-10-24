@@ -7,7 +7,9 @@ authors = [
     { email = "jahaninasab.mahyar@gmail.com" }
 ]
 requires-python = ">=3.12"
-dependencies = []
+dependencies = [
+    "pydantic>=2.14.1",
+]
 
 [project.scripts]
 factclash = "factclash:main"
