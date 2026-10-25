@@ -1,11 +1,11 @@
 from abc import ABC,abstractmethod
-from factclash.contradictions.schemas import ContradictionType,Analyzor,ContradictionAnalysisCollection,ContextBlockCollection
+from factclash.contradictions.schemas import ContradictionType,Analyzer,ContradictionAnalysisCollection,ContextBlockCollection
 
-class ContradictionAnalyzor(ABC):
+class ContradictionAnalyzer(ABC):
     def __init__(self):
         self.name = "Unique name of the analyzer"
         self.description = "A detailed description of the analyzer's functionality."
-        self.method: Analyzor = None
+        self.method: Analyzer = None
 
     @abstractmethod
     async def context_analysis(self, context:list[str]) ->  ContradictionType:

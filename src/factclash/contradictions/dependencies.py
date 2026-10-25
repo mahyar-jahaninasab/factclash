@@ -1,16 +1,16 @@
 import logging
 
-from factclash.services.analyzor.llm_based import LLMAnalyzor
-from factclash.services.analyzor.nlp_based import NLPAnalyzor
+from factclash.services.analyzer.llm_based import LLMAnalyzer
+from factclash.services.analyzer.nlp_based import NLPAnalyzer
 
 _logger = logging.getLogger(__name__)
 
 
-async def get_llm_analyzor_agent():
+async def get_llm_analyzer_agent():
     _logger.info("LLM agent is initialized to analyze for contradictions")
-    return LLMAnalyzor()
+    return LLMAnalyzer()
 
 
-async def get_nlp_analyzor_agent():
+async def get_nlp_analyzer_agent():
     _logger.info("NLP agent is initialized to analyze for contradictions")
-    return NLPAnalyzor()
+    return NLPAnalyzer()

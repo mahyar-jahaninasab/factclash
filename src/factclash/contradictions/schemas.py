@@ -23,7 +23,7 @@ class SourceType(Enum):
     GENERATION = "generation"
     PROMPT = "prompt"
 
-class Analyzor(Enum):
+class Analyzer(Enum):
     """Specifies the underlying engine or methodology used to analyze and detect contradictions."""
     LLM = "LLM"
     HYBRID = "HYBRID"
@@ -100,7 +100,7 @@ class ContradictionAnalysis(BaseModel):
         ..., 
         description="The classification category of the contradiction identified in the text."
     )
-    analyzor: Analyzor = Field(
+    analyzor: Analyzer = Field(
         ..., 
         description="The analysis engine or methodology (e.g., LLM, NLP, Hybrid) used to perform the check."
     )
