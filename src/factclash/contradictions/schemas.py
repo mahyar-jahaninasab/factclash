@@ -23,6 +23,12 @@ class SourceType(Enum):
     GENERATION = "generation"
     PROMPT = "prompt"
 
+class Analyzor(Enum):
+    """Specifies the underlying engine or methodology used to analyze and detect contradictions."""
+    LLM = "LLM"
+    HYBRID = "HYBRID"
+    NLP = "NLP"
+
 
 class BaseSourceMetadata(BaseModel):
     """Base metadata associated with an information source."""
@@ -85,4 +91,36 @@ class ContextBlockCollection(BaseModel):
     blocks: list[ContextBlock] = Field(
         ..., 
         description="List of context sources for the contradiction detection pipeline."
+    )
+
+class ContradictionAnalysis(BaseModel):
+    """Represents the complete analysis results and evaluation metrics for a detected contradiction."""
+    
+    contradiction_type: ContradictionType = Field(
+        ..., 
+        description="The classification category of the contradiction identified in the text."
+    )
+    analyzor: Analyzor = Field(
+        ..., 
+        description="The analysis engine or methodology (e.g., LLM, NLP, Hybrid) used to perform the check."
+    )
+    confidence: float = Field(
+        ..., 
+        description="Statistical confidence score or probability assigned to the detected contradiction (ranging from 0.0 to 1.0)."
+    )
+    metadata: Optional[dict] = Field(
+        default=None, 
+        description="Additional diagnostic metadata, token metrics, or raw model outputs from the analysis."
+    )
+    context_block: ContextBlock = Field(
+        ..., 
+        description="The specific context block containing the passages where the contradiction was evaluated."
+    )
+
+class ContradictionAnalysisCollection(BaseModel):
+    """Wrapper collection representing a batch of contradiction analysis results."""
+    
+    blocks: list[ContradictionAnalysis] = Field(
+        ..., 
+        description="A list of contradiction analysis results evaluated across the source context blocks."
     )
