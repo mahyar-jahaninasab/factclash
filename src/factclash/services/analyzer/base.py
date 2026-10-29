@@ -16,9 +16,8 @@ class ContradictionAnalyzer(ABC):
         pass
 
     @abstractmethod
-    async def overall_analysis(self, context:ContextBlockCollection) -> ContradictionAnalysisCollection:
+    async def overall_analysis(self, context_blocks:ContextBlockCollection) -> ContradictionAnalysisCollection:
         pass
-
 
 
 

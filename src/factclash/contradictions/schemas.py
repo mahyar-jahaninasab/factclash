@@ -100,7 +100,7 @@ class ContradictionAnalysis(BaseModel):
         ..., 
         description="The classification category of the contradiction identified in the text."
     )
-    analyzor: Analyzer = Field(
+    analyzer: Analyzer = Field(
         ..., 
         description="The analysis engine or methodology (e.g., LLM, NLP, Hybrid) used to perform the check."
     )
