@@ -3,7 +3,7 @@ from typing import Optional, Union
 from uuid import UUID
 import uuid
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 
 
 class ContradictionType(Enum):
@@ -92,6 +92,32 @@ class ContextBlockCollection(BaseModel):
         ..., 
         description="List of context sources for the contradiction detection pipeline."
     )
+    # Example 
+    model_config = ConfigDict(
+        json_schema_extra={
+            "examples": [
+                        {
+                        "blocks": [
+                            {
+                            "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+                            "source_type": "retrieval",
+                            "passages": [
+                                            "The facility operates 24 hours a day, 7 days a week.",
+                                            "The facility closes at 6:00 PM every evening."
+                                            ],
+                            "metadata": {
+                                "id": "operational",
+                                "description": "The retrived doc discusses operational timing of the facility",
+                                "score": 0.25,
+                                "prompt": "find me facility operations I was told it is three days a week",
+                                "provider": "rag"
+                            }
+                            }
+                        ]
+                        }
+                    ]
+        }
+    )
 
 class ContradictionAnalysis(BaseModel):
     """Represents the complete analysis results and evaluation metrics for a detected contradiction."""
@@ -116,6 +142,7 @@ class ContradictionAnalysis(BaseModel):
         ..., 
         description="The specific context block containing the passages where the contradiction was evaluated."
     )
+
 
 class ContradictionAnalysisCollection(BaseModel):
     """Wrapper collection representing a batch of contradiction analysis results."""
