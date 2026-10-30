@@ -41,6 +41,10 @@ The project is in the initial phase.
 
 For more information about the type of contradictions, read [docs/contradictions.md](docs/contradictions.md).
 
+## Usage 
+```bash
+uv run factclash
+```
 
 ## v0 scope 
 
