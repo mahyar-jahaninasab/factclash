@@ -1,4 +1,3 @@
-import pytest
 from fastapi.testclient import TestClient
 from fastapi import status
 from factclash import app
@@ -142,5 +141,5 @@ def test_nlp_endpoint_wrong_enum_value():
 def test_nlp_endpoint_wrong_input():
     response = client.post(
         "/api/v1/contradictions/nlp",
-        json= "The facility operates 24 hours a day, 7 days a week. The facility closes at 6:00 PM every evening.")
+        content= "The facility operates 24 hours a day, 7 days a week. The facility closes at 6:00 PM every evening.")
     assert response.status_code == status.HTTP_422_UNPROCESSABLE_CONTENT
