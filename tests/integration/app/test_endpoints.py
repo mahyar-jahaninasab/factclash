@@ -11,28 +11,10 @@ def test_read_root():
     assert response.status_code == status.HTTP_200_OK
     assert response.json() == {"message": "Hello I am confused, these facts don't make sense"}
 
-def test_nlp_endpoint_happy_path():
+def test_nlp_endpoint_happy_path(sample_input):
     response = client.post(
         "/api/v1/contradictions/nlp",
-        json={
-            "blocks": [
-                {
-                "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
-                "metadata": {
-                    "description": "The retrived doc discusses operational timing of the facility",
-                    "id": "operational",
-                    "prompt": "find me facility operations I was told it is three days a week",
-                    "provider": "rag",
-                    "score": 0.25
-                },
-                "passages": [
-                    "The facility operates 24 hours a day, 7 days a week.",
-                    "The facility closes at 6:00 PM every evening."
-                ],
-                "source_type": "retrieval"
-                }
-            ]
-            }
+        json=sample_input
                            )
     assert response.status_code == status.HTTP_200_OK
     assert response.json() == {
@@ -62,79 +44,32 @@ def test_nlp_endpoint_happy_path():
                                 }
 
 
-def test_nlp_endpoint_wrong_context_type():
+def test_nlp_endpoint_wrong_context_type(sample_input):
+    sample_input["blocks"][0]["passages"] = "The facility operates 24 hours a day, 7 days a week. The facility closes at 6:00 PM every evening."
     response = client.post(
         "/api/v1/contradictions/nlp",
-        json={
-            "blocks": [
-                {
-                "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
-                "metadata": {
-                    "description": "The retrived doc discusses operational timing of the facility",
-                    "id": "operational",
-                    "prompt": "find me facility operations I was told it is three days a week",
-                    "provider": "rag",
-                    "score": 0.25
-                },
-                "passages": 
-                    "The facility operates 24 hours a day, 7 days a week. The facility closes at 6:00 PM every evening."
-                ,
-                "source_type": "retrieval"
-                }
-            ]
-            }
-                           )
+        json=sample_input)
     assert response.status_code == status.HTTP_422_UNPROCESSABLE_CONTENT
 
 
-def test_nlp_endpoint_wrong_field_name():
+def test_nlp_endpoint_wrong_field_name(sample_input):
+    
+    sample_input["blocks"][0]["source_types"] =  sample_input["blocks"][0].pop("source_type")
     response = client.post(
         "/api/v1/contradictions/nlp",
-        json={
-            "blocks": [
-                {
-                "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
-                "metadata": {
-                    "description": "The retrived doc discusses operational timing of the facility",
-                    "id": "operational",
-                    "prompt": "find me facility operations I was told it is three days a week",
-                    "provider": "rag",
-                    "score": 0.25
-                },
-                "passages": 
-                    ["The facility operates 24 hours a day, 7 days a week. The facility closes at 6:00 PM every evening."]
-                ,
-                "source_types": "retrieval"
-                }
-            ]
-            }
+        json=sample_input
                            )
     assert response.status_code == status.HTTP_422_UNPROCESSABLE_CONTENT
 
 
 
-def test_nlp_endpoint_wrong_enum_value():
+def test_nlp_endpoint_wrong_enum_value(sample_input):
+    sample_input["blocks"][0]["source_type"] =  "known"
     response = client.post(
         "/api/v1/contradictions/nlp",
-        json={
-            "blocks": [
-                {
-                "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
-                "metadata": {
-                    "description": "The retrived doc discusses operational timing of the facility",
-                    "id": "operational",
-                    "prompt": "find me facility operations I was told it is three days a week",
-                    "provider": "rag",
-                    "score": 0.25
-                },
-                "passages": 
-                    ["The facility operates 24 hours a day, 7 days a week. The facility closes at 6:00 PM every evening."]
-                ,
-                "source_type": "known"
-                }
-            ]
-            }
+        json=sample_input
                            )
+
     assert response.status_code == status.HTTP_422_UNPROCESSABLE_CONTENT
 
 
