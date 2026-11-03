@@ -1,5 +1,4 @@
 from abc import ABC, abstractmethod
-from typing import Type
 
 from factclash.contradictions.schemas import (
     Analyzer,
@@ -7,18 +6,6 @@ from factclash.contradictions.schemas import (
     ContradictionAnalysisCollection,
     ContradictionType,
 )
-
-ANALYZER_REGISTRY: dict[Analyzer, Type["ContradictionAnalyzer"]] = {}
-
-
-def register_analyzer(method: Analyzer):
-    """Decorator to automatically register an analyzer class."""
-
-    def decorator(cls: Type["ContradictionAnalyzer"]):
-        ANALYZER_REGISTRY[method] = cls
-        return cls
-
-    return decorator
 
 
 class ContradictionAnalyzer(ABC):
