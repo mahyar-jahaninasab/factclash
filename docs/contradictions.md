@@ -61,7 +61,7 @@ Two sentences cannot both be true, but they can both be false depending on missi
 
 ### Quantification Contradiction
 
-This happens when two sentences disagree entirely on how many, how much or the extent of something. 
+This happens when two sentences disagree entirely on how many, how much or the extent of something.
 
 > **Concept:** One setence stablishes a general rule while the other is exception.
 
@@ -75,9 +75,9 @@ This happens when two sentences disagree entirely on how many, how much or the e
 ## Content & Context
 
 
-### Lexical 
+### Lexical
 
-This contradiction happens when the semantic of the words inside the sentences are opposite of each other. 
+This contradiction happens when the semantic of the words inside the sentences are opposite of each other.
 
 **Example 5:**
 ```text
@@ -85,9 +85,9 @@ Consider a commercial distribution agreement drafted in Australia containing the
 • Clause 2.1 (The Grant): "The Principal hereby grants the Distributor an exclusive right to market and sell the Products within the territory of New South Wales."
 • Clause 5.4 (The Reservation): "The Principal explicitly reserves the right to directly market and sell the Products to any corporate clients located in New South Wales."
 ```
-> **fatal lexical clash**: The words "exclusive" and "the Principal reserves the right to sell" are repugnant to one another. 
+> **fatal lexical clash**: The words "exclusive" and "the Principal reserves the right to sell" are repugnant to one another.
 
-### Temporal 
+### Temporal
 
 A temporal contradiction happens when two data points, reports seem to deny each other but the clash only exist because they are anchored to different points in time.
 
@@ -97,7 +97,7 @@ A temporal contradiction happens when two data points, reports seem to deny each
 • Document B (2:15 PM): "The Company has entered Voluntary Administration under Section 436A of the Corporations Act 2001 (Cth); all trading of shares is suspended."
 ```
 
-### Pragmatic 
+### Pragmatic
 
 These sentences do not break any rules of grammar or explicit dictionary definitions, but they violate our collective understanding of physical reality and real-world facts.
 
