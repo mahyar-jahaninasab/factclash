@@ -1,16 +1,17 @@
 from factclash.contradictions.schemas import (
+    Analyzer,
     ContextBlockCollection,
     ContradictionAnalysis,
     ContradictionAnalysisCollection,
     ContradictionType,
 )
-from factclash.services.analyzer.base import Analyzer, ContradictionAnalyzer
+from factclash.services.analyzer.base import ContradictionAnalyzer, register_analyzer
 
 
+@register_analyzer(Analyzer.NLP)
 class NLPAnalyzer(ContradictionAnalyzer):
     def __init__(self):
-        super().__init__()
-        self.method = Analyzer.NLP
+        super().__init__(method=Analyzer.NLP)
 
     async def context_analysis(self, context: list[str]) -> ContradictionType:
         return ContradictionType.CONTRARY
@@ -24,8 +25,7 @@ class NLPAnalyzer(ContradictionAnalyzer):
         self, context_blocks: ContextBlockCollection
     ) -> ContradictionAnalysisCollection:
         analysis_collection = []
-        blocks = context_blocks.blocks
-        for context_block in blocks:
+        for context_block in context_blocks.blocks:
             contradiction_type = await self.context_analysis(context_block.passages)
             confidence_score = await self.confidence_analysis(
                 context_block.passages, contradiction_type

@@ -1,6 +1,6 @@
-# System 
+# System
 
-## Input 
+## Input
 
 Below is the complete text fed into the LLM, formatted using Markdown diff markers (`+` for positive assertions $P$, `-` for negative assertions $\neg P$) and inline text highlighting to visually pinpoint where strict contradictions collide across the **History**, **Retrieved Information**, and **Prompt**.
 
@@ -26,7 +26,7 @@ User: Since server `srv-prod-01` is running, why are you reporting that SSL Cert
 ================================== CONTEXT WINDOW END ==================================
 ```
 
-## Detection 
+## Detection
 
 ### Contradiction Type: Strict Contradiction
 
@@ -78,9 +78,9 @@ Example 1:
 | Pragmatic Contradiction | None | None | None | None |
 ---
 
-> **Score**: Measuring the confidence in detected Contradiction Type. 
-- The high score is an indicator that LLM can make the final call. 
-- The low score is an indicator that a human in the loop should approve the process. 
-- The medium score is an indicator that more context or reasoning is needed to improve the decision making process. 
-- The range for each decision should be tuned based on the importance of the decision in a specific domain. 
-- If the score is `None`, it means that we did not detect the specific type of contradictions. 
+> **Score**: Measuring the confidence in detected Contradiction Type.
+- The high score is an indicator that LLM can make the final call.
+- The low score is an indicator that a human in the loop should approve the process.
+- The medium score is an indicator that more context or reasoning is needed to improve the decision making process.
+- The range for each decision should be tuned based on the importance of the decision in a specific domain.
+- If the score is `None`, it means that we did not detect the specific type of contradictions.

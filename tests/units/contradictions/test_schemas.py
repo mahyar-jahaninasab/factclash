@@ -41,6 +41,8 @@ def test_accept_search_fields():
     assert pydantic_model.id == data["id"]
     assert pydantic_model.source_type.value == data["source_type"]
     assert pydantic_model.passages == data["passages"]
+
+    assert pydantic_model.metadata is not None
     assert pydantic_model.metadata.id == data["metadata"]["id"]
     assert pydantic_model.metadata.description == data["metadata"]["description"]
     assert pydantic_model.metadata.prompt == data["metadata"]["prompt"]
@@ -66,6 +68,8 @@ def test_accept_retrieval_fields():
     assert pydantic_model.id == data["id"]
     assert pydantic_model.source_type.value == data["source_type"]
     assert pydantic_model.passages == data["passages"]
+
+    assert pydantic_model.metadata is not None
     assert pydantic_model.metadata.id == data["metadata"]["id"]
     assert pydantic_model.metadata.description == data["metadata"]["description"]
     assert pydantic_model.metadata.prompt == data["metadata"]["prompt"]
@@ -85,7 +89,12 @@ def test_accept_generation_fields():
     assert pydantic_model.id == data["id"]
     assert pydantic_model.source_type.value == data["source_type"]
     assert pydantic_model.passages == data["passages"]
-    assert pydantic_model.metadata.turn_number == data["metadata"]["turn_number"]
+
+    assert pydantic_model.metadata is not None
+    assert (
+        getattr(pydantic_model.metadata, "turn_number")
+        == data["metadata"]["turn_number"]
+    )
 
 
 def test_str_context_fields():
