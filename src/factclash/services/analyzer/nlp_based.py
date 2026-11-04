@@ -5,10 +5,9 @@ from factclash.contradictions.schemas import (
     ContradictionAnalysisCollection,
     ContradictionType,
 )
-from factclash.services.analyzer.base import ContradictionAnalyzer, register_analyzer
+from factclash.services.analyzer.base import ContradictionAnalyzer
 
 
-@register_analyzer(Analyzer.NLP)
 class NLPAnalyzer(ContradictionAnalyzer):
     def __init__(self):
         super().__init__(method=Analyzer.NLP)
