@@ -39,25 +39,15 @@ The project is in the initial phase.
 
 ## Types of contradiciton
 
-For more information about the type of contradictions, read [docs/contradictions.md](docs/contradictions.md).
+For more information about the type of contradictions, read  [contradictions.md](docs/factclash/domain-model/cross-cutting/contradictions.md).
+
+## Failure Modes
+
+- `Confirmation Bias`: Models demonstrate a systematic preference for external evidence that corroborates their internal parametric priors.
+- `Sycophancy and False Premise Acceptance`: Instruction tuning aligns models to follow user intent, making them highly vulnerable to user-induced prompt contradictions. When a user prompt introduces a false premise or a biased hint, models frequently abandon parametric truth to agree with the user.
+- `Blindness to Generated Context`: In multi-step generation or agentic workflows, LLMs treat their own previously generated hallucinatory outputs as valid contextual truth. When retrieved factual contexts conflict with model-generated contexts, LLMs struggle to disentangle the two, frequently prioritizing their own synthetic output over reliable external data.
 
 ## Usage
 ```bash
 uv run factclash
 ```
-
-## v0 scope
-
-In scope: ``Strict Contraction`` and ``Quantification Contradiction`` as they can be fully automated using standard NLP
-
-Out Scope:
-- ``hybrid pipeline`` : Temporal Contradiction and Contrary Contradiction
-- ``Need LLM``: Lexical Contradiction and Pragmatic Contradiction
-
-For the input and output of the system check [spec](docs/spec.md)
-
-### Later
-
-- partitioning
-- input format: json, md,
-- output format: JSON
