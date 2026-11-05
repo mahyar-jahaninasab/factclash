@@ -39,7 +39,7 @@ The project is in the initial phase.
 
 ## Types of contradiciton
 
-For more information about the type of contradictions, read [docs/contradictions.md](docs/contradictions.md).
+For more information about the type of contradictions, read [docs/contradictions.md](docs/factclash/domain-model/cross-cutting/contradictions.md).
 
 ## Usage
 ```bash
@@ -54,7 +54,7 @@ Out Scope:
 - ``hybrid pipeline`` : Temporal Contradiction and Contrary Contradiction
 - ``Need LLM``: Lexical Contradiction and Pragmatic Contradiction
 
-For the input and output of the system check [spec](docs/spec.md)
+For the input and output of the system check [spec](docs/factclash/functional-requirements/spec.md)
 
 ### Later
 
