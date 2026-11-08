@@ -3,21 +3,21 @@
 This document defines three knowledge entities and the rules that connect them.
 
 | Entity | In one line | Can it become a Fact? |
-|---|---|---|
+| --- | --- | --- |
 | **Fact** | A verified, immutable proposition backed by evidence | — |
 | **Hypothesis** | An unverified proposition that is being evaluated and is used to evaluate a Premise | Yes |
 | **Premise** | A proposition assumed true for a line of reasoning | No |
 
 All three hold a single proposition in `statement`. They differ in **why** the system treats that proposition as usable:
 
-- A Fact is usable because it has been verified and we can come to a conclusion using it and decide on the next action of the system.
-- A Hypothesis is not usable as truth. It is being tested.
-- A Premise is usable because someone chose to assume it or is true to a subjected reality.
+* A Fact is usable because it has been verified and we can come to a conclusion using it and decide on the next action of the system.
+* A Hypothesis is not usable as truth. It is being tested.
+* A Premise is usable because someone chose to assume it or is true to a subjected reality.
 
 Shared conventions:
 
-- `scope` is the non-temporal context in which a proposition holds, such as system, environment or jurisdiction. Time is kept in separate validity fields.
-- Every state change is recorded as a Trace event. Trace is defined elsewhere.
+* `scope` is the non-temporal context in which a proposition holds, such as system, environment or jurisdiction. Time is kept in separate validity fields.
+* Every state change is recorded as a Trace event. Trace is defined elsewhere.
 
 ---
 
@@ -36,7 +36,7 @@ A Fact holds only within its `scope` and validity period. A high confidence scor
 **Fact**
 
 | Field | Type | Description |
-|---|---|---|
+| --- | --- | --- |
 | id | Unique ID | Unique identifier |
 | subject | Reference or Text | What the Fact is about |
 | statement | Text | The proposition |
@@ -55,12 +55,15 @@ A Fact holds only within its `scope` and validity period. A high confidence scor
 
 **Evidence**
 
+Evidence is a value object: two records with the same `source_id`, `content` and `observed_at` are the same evidence, and changing any of them makes it different evidence. `evidence_hash` is computed from all three, so the same evidence recorded twice is stored once, while the same content from two different sources stays two records and counts as two sources.
+
 | Field | Type | Description |
-|---|---|---|
+| --- | --- | --- |
 | id | Unique ID | Unique identifier |
 | source_id | Reference to Source | Where it came from |
 | evidence_type | Category | `document`, `observation`, `measurement`, `record`, `test_result`, `external_assertion` |
-| content | Struct / Text | The evidence itself |
+| content | Struct / Text | The evidence payload itself |
+| evidence_hash | String (e.g., SHA-256) | Hash of `source_id`, `content` and `observed_at`. Two records with the same hash are the same evidence |
 | observed_at | DateTime / Null | When the evidence was produced |
 | collected_at | DateTime | When the system received it |
 | collected_by | Reference to User / Agent / System | Actor who collected it |
@@ -69,7 +72,7 @@ A Fact holds only within its `scope` and validity period. A high confidence scor
 **Source**
 
 | Field | Type | Description |
-|---|---|---|
+| --- | --- | --- |
 | id | Unique ID | Unique identifier |
 | source_type | Category | `RAG`, `LLM`, `external`, `human` |
 | name | Text | Display name |
@@ -78,15 +81,17 @@ A Fact holds only within its `scope` and validity period. A high confidence scor
 
 **Verification**
 
+Verification is an entity. Each record is one run of a Verification Policy version against one Hypothesis or Fact, using one method (`verification_type`). Two runs with identical inputs are still two separate attempts, so a Verification is identified by its `id`, not by its values.
+
 | Field | Type | Description |
-|---|---|---|
+| --- | --- | --- |
 | id | Unique ID | Unique identifier |
 | target_id | Reference to Hypothesis or Fact | What is being verified |
 | policy_id | Reference to Verification Policy | Policy applied |
 | policy_version | Number | Exact policy version applied |
 | verification_type | Category | `automated`, `manual`, `external`, `experimental` |
 | evidence_ids | List of references to Evidence | Evidence evaluated |
-| result | Category | `passed`, `failed` (evidence contradicts the claim), `inconclusive` (policy not satisfied) |
+| result | Category | `passed`, `conditional` (holds only under some conditions), `failed` (evidence contradicts the claim), `inconclusive` (policy not satisfied) |
 | confidence | Number | Confidence of the result, 0–1 |
 | verified_at | DateTime | When it ran |
 | verified_by | Reference to User / Agent / System | Actor or system that ran it |
@@ -96,15 +101,14 @@ A Fact holds only within its `scope` and validity period. A high confidence scor
 Each version of a policy is an immutable record. The key is (`id`, `version`).
 
 | Field | Type | Description |
-|---|---|---|
+| --- | --- | --- |
 | id | Unique ID | Policy identifier, shared across versions |
 | version | Number | Version number |
 | name | Text | Display name |
 | allowed_verification_types | List of Categories | Verification types that may satisfy the policy |
 | required_evidence_types | List of Categories | Evidence types that must be present |
 | minimum_source_count | Number | Minimum number of distinct `source_id`s across the evidence |
-| minimum_authority | Category | Lowest Source authority that counts toward the source count |
-| minimum_confidence | Number / Null | Minimum Verification confidence, if any |
+| minimum_reliability | Number | Lowest Source `reliability` (0–1) that counts toward `minimum_source_count` |
 
 ## Lifecycle
 
@@ -121,10 +125,11 @@ stateDiagram-v2
     disputed --> retracted : verification invalidated
     superseded --> [*]
     retracted --> [*]
+
 ```
 
 | State | Description |
-|---|---|
+| --- | --- |
 | accepted | Verified and available for reasoning |
 | disputed | Challenged. Kept for audit, but excluded from reasoning unless the caller explicitly allows it |
 | superseded | Replaced by a newer Fact. Terminal state |
@@ -132,18 +137,19 @@ stateDiagram-v2
 
 **Rules**
 
-- A Fact MUST reference a passed Verification and at least one Evidence record.
-- A Fact MUST NOT be created from an internal inference alone, whatever its confidence.
-- All fields except `status` are immutable. `status` changes only through the actions below.
-- Evidence is immutable.
-- A superseding Fact MUST set `supersedes_id`, and the old Fact moves to `superseded`.
-- A Verification is bound to a policy version. A new policy version MUST NOT change past results.
-- Validity time (`valid_from` / `valid_until`) and recording time (`created_at`) are separate and MUST NOT be confused.
+* A Fact MUST reference a passed Verification and at least one Evidence record.
+* A Fact MUST NOT be created from an internal inference alone, whatever its confidence.
+* All fields except `status` are immutable. `status` changes only through the actions below.
+* Evidence is immutable.
+* A superseding Fact MUST set `supersedes_id`, and the old Fact moves to `superseded`.
+* A Verification is bound to a policy version. A new policy version MUST NOT change past results.
+* Validity time (`valid_from` / `valid_until`) and recording time (`created_at`) are separate and MUST NOT be confused.
+* Before a Fact is created, it is compared by meaning with the accepted Facts in the same scope. If an equivalent Fact already exists, no new Fact is created.
 
 ## Actions
 
 | Action | Resource | Operation | Reversible | Description |
-|---|---|---|---|---|
+| --- | --- | --- | --- | --- |
 | create_fact | fact | create | No | Verify evidence and create the Fact together in one atomic step |
 | retrieve_fact | fact | read | N/A | Read a Fact with its evidence and verification |
 | dispute_fact | fact | alter | Yes | Move an accepted Fact to `disputed` |
@@ -156,11 +162,10 @@ stateDiagram-v2
 | create_verification_policy | verification_policy | create | No | Create version 1 of a policy |
 | alter_verification_policy | verification_policy | create | No | Create the next version of a policy |
 
-
 ## Relationships
 
 | Entity | Cardinality | Direction | Description |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | Evidence | Many-to-many | Fact <-> Evidence | Evidence supports Facts |
 | Source | Many-to-one | Evidence -> Source | Each Evidence record has one Source |
 | Verification | Many-to-one | Fact -> Verification | The Verification that established the Fact |
@@ -183,16 +188,19 @@ A Hypothesis is a single proposition that has not been verified yet. The system 
 
 A Hypothesis may carry an internal `confidence`, but that score only ranks hypotheses. It never verifies one.
 
-A Hypothesis becomes a Fact only through `promote_hypothesis`, which requires a passed Verification.
+A Hypothesis becomes a Fact only through `promote_hypothesis`, which requires a passed Verification, or a `conditional` one when the rule below allows it.
 
+Verification decides what a Hypothesis becomes:
 
+* **Fact**: it passed, or it holds under conditions that fit a narrower `scope`, nothing contradicts it, and it is enough on its own to make a decision.
+* **Premise**: it holds only under conditions, and either other Premises contradict it or it is not enough on its own to make a decision.
 
 ## Schemas
 
 **Hypothesis**
 
 | Field | Type | Description |
-|---|---|---|
+| --- | --- | --- |
 | id | Unique ID | Unique identifier |
 | subject | Reference or Text | What the Hypothesis is about |
 | statement | Text | The proposition. Immutable |
@@ -202,7 +210,9 @@ A Hypothesis becomes a Fact only through `promote_hypothesis`, which requires a 
 | supporting_fact_ids | List of references to Fact | Facts that support it |
 | contradicting_fact_ids | List of references to Fact | Facts that contradict it |
 | fact_id | Reference to Fact / Null | The Fact created when it was confirmed |
-| status | Category | `proposed`, `confirmed`, `refuted`, `abandoned` |
+| premise_id | Reference to Premise / Null | The Premise created when it was adopted as one |
+| contradicting_premise_ids | List of references to Premise | Premises it contradicts, recorded when it is checked on its way to becoming a Premise |
+| status | Category | `proposed`, `confirmed`, `adopted`, `refuted`, `abandoned` |
 | created_at | DateTime | Creation timestamp |
 | created_by | Reference to User / Agent / System | Who proposed it |
 
@@ -214,47 +224,51 @@ stateDiagram-v2
     proposed --> confirmed : passed verification, Fact created
     proposed --> refuted : failed verification or contradicted by accepted Fact
     proposed --> abandoned : withdrawn
+    proposed --> adopted : conditional verification, Premise created
+    adopted --> [*]
     confirmed --> [*]
     refuted --> [*]
     abandoned --> [*]
+
 ```
 
 | State | Description |
-|---|---|
+| --- | --- |
 | proposed | Open and being evaluated |
 | confirmed | Promoted to a Fact. From here on the Fact carries the truth status |
+| adopted | Became a Premise. From here on the Premise carries the status |
 | refuted | Shown false. Terminal state |
 | abandoned | No longer pursued. Terminal state |
 
 **Rules**
 
-- `statement` and `scope` are immutable. To change the claim, propose a new Hypothesis.
-- An `inconclusive` Verification leaves the Hypothesis `proposed`.
-- A conclusion that depends on a Hypothesis is conditional and MUST NOT be stored as a Fact.
+* `statement` and `scope` are immutable. To change the claim, propose a new Hypothesis.
+* An `inconclusive` Verification leaves the Hypothesis `proposed`.
+* A conclusion that depends on a Hypothesis is conditional and MUST NOT be stored as a Fact.
+* Contradictions are checked only on Hypotheses: before a Hypothesis becomes a Premise, it is compared with the active Premises, and every contradiction found is recorded in `contradicting_premise_ids`.
 
 ## Actions
 
 | Action | Resource | Operation | Reversible | Description |
-|---|---|---|---|---|
+| --- | --- | --- | --- | --- |
 | propose_hypothesis | hypothesis | create | No | Create a Hypothesis in `proposed` |
 | link_fact | hypothesis | alter | Yes | Add a Fact as supporting or contradicting evidence |
 | update_confidence | hypothesis | alter | Yes | Change the internal confidence estimate |
 | promote_hypothesis | fact | create | No | Create a Fact from a passed Verification and set the Hypothesis to `confirmed` |
+| adopt_as_premise | premise | create | No | Create a Premise from a conditional Verification, record the Premises it contradicts, and set the Hypothesis to `adopted` |
 | refute_hypothesis | hypothesis | alter | No | Move to `refuted` |
 | abandon_hypothesis | hypothesis | alter | No | Move to `abandoned` |
 
 ## Attributes (ABAC)
 
 | Entity | Attribute | Description |
-|---|---|---|
+| --- | --- | --- |
 | Hypothesis | sensitivity | Access classification |
-
-
 
 ## Relationships
 
 | Entity | Cardinality | Direction | Description |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | Fact | Many-to-many | Hypothesis <-> Fact | Supporting and contradicting Facts |
 | Fact | One-to-one | Hypothesis -> Fact | The Fact it became, if confirmed |
 | Verification | One-to-many | Hypothesis -> Verification | Verification attempts |
@@ -266,7 +280,7 @@ stateDiagram-v2
 
 ## Summary
 
-A Premise is a proposition that a line of reasoning assumes to be true. It is stipulated, not verified. Examples are a scenario assumption, a planning constraint, or a "what if".
+A Premise is a proposition that a line of reasoning treats as true. It comes from one of two places: someone assumes it (a scenario assumption, a planning constraint, a "what if"), or it was a Hypothesis whose Verification showed it holds only under some conditions and is not enough on its own to make a decision.
 
 A Premise is valid only for the reasoning that uses it. Each Inference or Decision lists the Premises it depends on, so the set of premises a conclusion rests on is always visible.
 
@@ -277,12 +291,13 @@ A Premise never becomes a Fact. To establish it as true, propose it as a Hypothe
 **Premise**
 
 | Field | Type | Description |
-|---|---|---|
+| --- | --- | --- |
 | id | Unique ID | Unique identifier |
 | statement | Text | The assumed proposition. Immutable |
 | scope | Struct | Context in which it is assumed |
 | sensitivity | Category | Access classification |
 | rationale | Text / Null | Why it is assumed |
+| hypothesis_id | Reference to Hypothesis / Null | The Hypothesis it came from, if any |
 | status | Category | `active`, `invalidated`, `withdrawn` |
 | invalidated_by_fact_id | Reference to Fact / Null | The accepted Fact that contradicted it |
 | created_at | DateTime | Creation timestamp |
@@ -292,39 +307,43 @@ A Premise never becomes a Fact. To establish it as true, propose it as a Hypothe
 
 ```mermaid
 stateDiagram-v2
-    [*] --> active : adopted
+    [*] --> active : assumed, or adopted from a Hypothesis
     active --> invalidated : contradicted by accepted Fact
     active --> withdrawn : no longer assumed
     invalidated --> [*]
     withdrawn --> [*]
+
 ```
 
 | State | Description |
-|---|---|
+| --- | --- |
 | active | Available to reasoning that explicitly depends on it |
 | invalidated | Contradicted by an accepted Fact in an overlapping scope. Terminal state |
 | withdrawn | Dropped by its owner. Terminal state |
 
 **Rules**
 
-- `statement` and `scope` are immutable. To change an assumption, adopt a new Premise.
-- Premises have no weights. If two contradictory Premises are used in the same Inference, that Inference is invalid. Contradictory Premises can coexist only when they belong to separate lines of reasoning.
+* `statement` and `scope` are immutable. To change an assumption, adopt a new Premise.
+* Premises have no weights. If two contradictory Premises are used in the same Inference, that Inference is invalid. Contradictory Premises can coexist only when they belong to separate lines of reasoning.
 
 ## Actions
 
 | Action | Resource | Operation | Reversible | Description |
-|---|---|---|---|---|
+| --- | --- | --- | --- | --- |
 | adopt_premise | premise | create | No | Create a Premise in `active` |
 | invalidate_premise | premise | alter | No | Move to `invalidated` and record the contradicting Fact |
 | withdraw_premise | premise | alter | No | Move to `withdrawn` |
 
-
-
 ## Relationships
 
 | Entity | Cardinality | Direction | Description |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | Fact | Many-to-one | Premise -> Fact | The Fact that invalidated it, if any |
 | Decision | Many-to-many | Premise <-> Decision | Decisions that depend on it |
 
 ---
+
+## Open questions
+
+* Who decides whether a Hypothesis is "enough on its own to make a decision": the Verification Policy, or the caller?
+* Which Verification Policy does factclash use to fact-check a Hypothesis: which evidence types, how many sources, what minimum reliability?
