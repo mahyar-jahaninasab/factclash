@@ -15,6 +15,10 @@ dependencies = [
 [project.scripts]
 factclash = "factclash:main"
 
+[tool.pytest.ini_options]
+asyncio_mode = "auto"  # Automatically handle async tests
+asyncio_default_fixture_loop_scope = "function"  # New in 0.23+
+
 [build-system]
 requires = ["uv_build>=0.12.13,<0.13.0"]
 build-backend = "uv_build"
@@ -22,5 +26,6 @@ build-backend = "uv_build"
 [dependency-groups]
 dev = [
     "pytest>=9.1.1",
+    "pytest-asyncio>=1.4.1.post1",
     "ruff>=0.17.1",
 ]
