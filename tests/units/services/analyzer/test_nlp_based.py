@@ -8,7 +8,6 @@ async def nlp_analyzer():
     return NLPAnalyzer()
 
 
-@pytest.mark.asyncio
 @pytest.mark.parametrize(
     "data,expected_type",
     [
