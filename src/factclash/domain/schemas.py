@@ -38,6 +38,20 @@ class EvidenceType(Enum):
     ASSERTION = "assertion"
 
 
+class HypothesisStatus(Enum):
+    PROPOSED = "proposed"
+    CONFIRMED = "confirmed"
+    ADOPTED = "adopted"
+    REFUTED = "refuted"
+    ABANDONED = "abandoned"
+
+
+class PremiseStatus(Enum):
+    ACTIVE = "active"
+    INVALIDATED = "invalidated"
+    WITHDRAWN = "withdrawn"
+
+
 class Source(BaseModel):
     id: UUID = Field(description="Unique identifier for the source")
     source_type: SourceType = Field(
@@ -74,6 +88,12 @@ class Fact(BaseModel):
     fingerprint: str = Field(
         default="", description="SHA-256 computed hash used for duplicate detection"
     )
+
+    @model_validator(mode="after")
+    def validate_evidence(self) -> "Fact":
+        if not self.evidence_ids:
+            raise ValueError("A fact must have at least one piece of evidence")
+        return self
 
     @model_validator(mode="after")
     def compute_fingerprint_eagerly(self) -> "Fact":
@@ -116,4 +136,59 @@ class Evidence(BaseModel):
     )
     collected_at: datetime = Field(
         description="Timestamp when the system received the evidence"
+    )
+
+
+class Hypothesis(BaseModel):
+    id: UUID = Field(description="Unique identifier for the Hypothesis")
+    subject: str = Field(description="What the Hypothesis is about (Reference or Text)")
+    statement: str = Field(
+        frozen=True,
+        description="The unverified proposition under evaluation. Immutable",
+    )
+    scope: list[str] = Field(
+        frozen=True,
+        description="Non-temporal context in which the proposition would hold. Immutable",
+    )
+    sensitivity: FactSensitivity = Field(description="Access classification level")
+    confidence: Optional[float] = Field(
+        default=None,
+        ge=0.0,
+        le=1.0,
+        description="Current internal estimate (0 to 1) used for ranking, not for verification",
+    )
+    status: HypothesisStatus = Field(
+        description="Current status (proposed, confirmed, adopted, refuted, abandoned)"
+    )
+    created_at: datetime = Field(
+        description="Timestamp when the Hypothesis was created"
+    )
+    created_by: SourceType = Field(
+        description="Actor (User / Agent / System) who proposed the Hypothesis"
+    )
+
+
+class Premise(BaseModel):
+    id: UUID = Field(description="Unique identifier for the Premise")
+    statement: str = Field(
+        frozen=True,
+        description="The assumed proposition for a line of reasoning. Immutable",
+    )
+    scope: list[str] = Field(
+        frozen=True,
+        description="Context in which the proposition is assumed true. Immutable",
+    )
+    sensitivity: FactSensitivity = Field(description="Access classification level")
+    confidence: Optional[float] = Field(
+        default=None,
+        ge=0.0,
+        le=1.0,
+        description="Confidence score associated with the assumed proposition",
+    )
+    status: PremiseStatus = Field(
+        description="Current status (active, invalidated, withdrawn)"
+    )
+    created_at: datetime = Field(description="Timestamp when the Premise was recorded")
+    created_by: SourceType = Field(
+        description="Actor (User / Agent / System) who adopted the Premise"
     )
