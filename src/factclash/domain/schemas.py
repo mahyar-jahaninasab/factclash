@@ -16,11 +16,6 @@ class Source(Enum):
     RETRIEVAL = "retrieval"
 
 
-class FactType(Enum):
-    OBSERVED = "observed"
-    EXTERNAL = "external"
-
-
 class FactSenseitivity(Enum):
     PUBLIC = "public"
     INTERNAL = "internal"
@@ -33,6 +28,14 @@ class FactStatus(Enum):
     DISPUTED = "disputed"
     SUPERSEDED = "superseded"
     RETRACTED = "retracted"
+
+
+class EvidenceType(Enum):
+    DOCUMENT = "document"
+    OBSERVATION = "observation"
+    MEASUREMENT = "measurment"
+    RECORD = "record"
+    ASSERTION = "assertion"
 
 
 class Fact(BaseModel):
@@ -76,3 +79,13 @@ class FactStatusChange(BaseModel):
     status: FactStatus
     reason: Optional[str]
     changed_at: datetime
+
+
+class Evidence(BaseModel):
+    id: UUID
+    source_id: UUID
+    evidence_type: EvidenceType
+    content: list[str]
+    observed_at: Optional[datetime]
+    collected_at: datetime
+    metadata: Optional[dict]

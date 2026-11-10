@@ -40,34 +40,26 @@ A Fact holds only within its `scope` and validity period. A high confidence scor
 | id | Unique ID | Unique identifier |
 | subject | Reference or Text | What the Fact is about |
 | statement | Text | The proposition |
-| fact_type | Category | `observed` (internal observation or measurement) or `external` (asserted by an external source) |
 | scope | Struct | Context in which the Fact holds |
 | sensitivity | Category | Access classification |
 | valid_from | DateTime | Start of validity in the world |
 | valid_until | DateTime / Null | End of validity in the world. Null means open-ended |
 | evidence_ids | List of references to Evidence | Supporting evidence. Must not be empty |
 | verification_id | Reference to Verification | The passed Verification that established the Fact |
-| hypothesis_id | Reference to Hypothesis / Null | Hypothesis this Fact was promoted from, if any |
-| supersedes_id | Reference to Fact / Null | Fact this one replaces, if any |
 | status | Category | `accepted`, `disputed`, `superseded`, `retracted` |
 | created_at | DateTime | When the Fact was recorded. This is distinct from `valid_from` |
 | created_by | Reference to User / Agent / System | Actor who established it |
 
 **Evidence**
 
-Evidence is a value object: two records with the same `source_id`, `content` and `observed_at` are the same evidence, and changing any of them makes it different evidence. `evidence_hash` is computed from all three, so the same evidence recorded twice is stored once, while the same content from two different sources stays two records and counts as two sources.
-
 | Field | Type | Description |
 | --- | --- | --- |
 | id | Unique ID | Unique identifier |
 | source_id | Reference to Source | Where it came from |
-| evidence_type | Category | `document`, `observation`, `measurement`, `record`, `test_result`, `external_assertion` |
+| evidence_type | Category | `document`, `observation`, `measurement`, `record`,  `external_assertion` |
 | content | Struct / Text | The evidence payload itself |
-| evidence_hash | String (e.g., SHA-256) | Hash of `source_id`, `content` and `observed_at`. Two records with the same hash are the same evidence |
 | observed_at | DateTime / Null | When the evidence was produced |
 | collected_at | DateTime | When the system received it |
-| collected_by | Reference to User / Agent / System | Actor who collected it |
-| metadata | Struct | Source-specific extras |
 
 **Source**
 
