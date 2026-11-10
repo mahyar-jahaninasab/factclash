@@ -70,7 +70,9 @@ class Fact(BaseModel):
     id: UUID = Field(description="Unique identifier for the Fact")
     subject: str = Field(description="What the Fact is about")
     statement: str = Field(description="The proposition accepted as factual truth")
-    scope: list[str] = Field(description="Context in which the Fact holds")
+    scope: tuple[str, ...] = Field(
+        frozen=True, description="Context in which the Fact holds"
+    )
     sensitivity: FactSensitivity = Field(description="Access classification level")
     valid_from: Optional[datetime] = Field(
         default=None, description="Start of validity period in the real world"
@@ -82,7 +84,6 @@ class Fact(BaseModel):
         description="List of supporting evidence identifiers"
     )
     verification_id: UUID = Field(description="Reference to the verification process")
-    status: FactStatus = Field(description="Current status of the Fact")
     created_at: datetime = Field(description="Timestamp when the Fact was recorded")
     source: Source = Field(description="Source information for the Fact")
     fingerprint: str = Field(
@@ -112,7 +113,7 @@ class Fact(BaseModel):
         return self
 
 
-class FactStatusChange(BaseModel):
+class CurrentFactStatus(BaseModel):
     id: UUID = Field(description="Unique identifier for the status change record")
     fact_id: UUID = Field(description="Reference to the Fact whose status changed")
     status: FactStatus = Field(description="New status applied to the Fact")
