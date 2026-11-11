@@ -70,7 +70,7 @@ class Fact(BaseModel):
     id: UUID = Field(description="Unique identifier for the Fact")
     subject: str = Field(description="What the Fact is about")
     statement: str = Field(description="The proposition accepted as factual truth")
-    scope: list[str] = Field(description="Context in which the Fact holds")
+    scope: tuple[str, ...] = Field(description="Context in which the Fact holds")
     sensitivity: FactSensitivity = Field(description="Access classification level")
     valid_from: Optional[datetime] = Field(
         default=None, description="Start of validity period in the real world"
@@ -82,7 +82,6 @@ class Fact(BaseModel):
         description="List of supporting evidence identifiers"
     )
     verification_id: UUID = Field(description="Reference to the verification process")
-    status: FactStatus = Field(description="Current status of the Fact")
     created_at: datetime = Field(description="Timestamp when the Fact was recorded")
     source: Source = Field(description="Source information for the Fact")
     fingerprint: str = Field(
@@ -146,7 +145,7 @@ class Hypothesis(BaseModel):
         frozen=True,
         description="The unverified proposition under evaluation. Immutable",
     )
-    scope: list[str] = Field(
+    scope: tuple[str, ...] = Field(
         frozen=True,
         description="Non-temporal context in which the proposition would hold. Immutable",
     )
@@ -174,7 +173,7 @@ class Premise(BaseModel):
         frozen=True,
         description="The assumed proposition for a line of reasoning. Immutable",
     )
-    scope: list[str] = Field(
+    scope: tuple[str, ...] = Field(
         frozen=True,
         description="Context in which the proposition is assumed true. Immutable",
     )
