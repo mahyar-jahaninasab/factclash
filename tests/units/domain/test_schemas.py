@@ -8,13 +8,9 @@ from factclash.domain.schemas import (
     Fact,
     FactSensitivity,
     FactStatus,
+    CurrentFactStatus,
     Source,
     SourceType,
-    CurrentFactStatus,
-    Hypothesis,
-    HypothesisStatus,
-    Premise,
-    PremiseStatus,
 )
 
 
@@ -45,46 +41,19 @@ def make_fact(
         valid_until=None,
         evidence_ids=(uuid4(),),
         verification_id=uuid4(),
+        status=FactStatus.ACCEPTED,
         created_at=datetime.now(timezone.utc),
         source=source,
     )
 
 
-def make_hypothesis(
-    statement: str = "Cache hit rate can exceed 95%",
-    scope: list[str] | None = None,
-    confidence: float | None = 0.85,
-    status: HypothesisStatus = HypothesisStatus.PROPOSED,
-) -> Hypothesis:
-    return Hypothesis(
-        id=uuid4(),
-        subject="Cache Service",
-        statement=statement,
-        scope=scope if scope is not None else ["production"],
-        sensitivity=FactSensitivity.PUBLIC,
-        confidence=confidence,
-        status=status,
-        created_at=datetime.now(timezone.utc),
-        created_by=SourceType.AGENT,
-    )
+def test_fact_status_limited_to_enum_values(sample_source):
+    fact = make_fact(sample_source)
+    assert fact.status in FactStatus
 
-
-def make_premise(
-    statement: str = "Redis cluster is healthy",
-    scope: list[str] | None = None,
-    confidence: float | None = 0.95,
-    status: PremiseStatus = PremiseStatus.ACTIVE,
-) -> Premise:
-    return Premise(
-        id=uuid4(),
-        statement=statement,
-        scope=scope if scope is not None else ["production"],
-        sensitivity=FactSensitivity.PUBLIC,
-        confidence=confidence,
-        status=status,
-        created_at=datetime.now(timezone.utc),
-        created_by=SourceType.AGENT,
-    )
+    expected_statuses = {"accepted", "disputed", "superseded", "retracted"}
+    actual_statuses = {status.value for status in FactStatus}
+    assert actual_statuses == expected_statuses
 
 
 def test_fact_requires_evidence(sample_source):
@@ -101,6 +70,7 @@ def test_fact_requires_evidence(sample_source):
             valid_until=None,
             evidence_ids=(),
             verification_id=uuid4(),
+            status=FactStatus.ACCEPTED,
             created_at=datetime.now(timezone.utc),
             source=sample_source,
         )
@@ -122,6 +92,7 @@ def test_fact_status_change_is_tracked_separately(sample_source):
         changed_at=datetime.now(timezone.utc),
     )
 
+    assert fact.status == FactStatus.ACCEPTED
     assert change.status == FactStatus.DISPUTED
     assert change.fact_id == fact.id
 
@@ -152,45 +123,3 @@ def test_fingerprint_equal_on_mixed_casing_and_outer_spaces(sample_source: Sourc
     )
 
     assert fact1.fingerprint == fact2.fingerprint
-
-
-def test_hypothesis_confidence_validation():
-    with pytest.raises(ValidationError):
-        make_hypothesis(confidence=1.5)
-    with pytest.raises(ValidationError):
-        make_hypothesis(confidence=-0.1)
-
-
-def test_hypothesis_immutable_fields():
-    hypothesis = make_hypothesis()
-    with pytest.raises(ValidationError):
-        setattr(hypothesis, "statement", "Modified hypothesis statement")
-    with pytest.raises(ValidationError):
-        setattr(hypothesis, "scope", ["staging"])
-
-
-def test_hypothesis_creation_and_status():
-    h = make_hypothesis(confidence=None, status=HypothesisStatus.CONFIRMED)
-    assert h.confidence is None
-    assert h.status == HypothesisStatus.CONFIRMED
-
-
-def test_premise_confidence_validation():
-    with pytest.raises(ValidationError):
-        make_premise(confidence=1.1)
-    with pytest.raises(ValidationError):
-        make_premise(confidence=-0.05)
-
-
-def test_premise_immutable_fields():
-    premise = make_premise()
-    with pytest.raises(ValidationError):
-        setattr(premise, "statement", "Modified premise statement")
-    with pytest.raises(ValidationError):
-        setattr(premise, "scope", ["staging"])
-
-
-def test_premise_creation_and_status():
-    p = make_premise(confidence=None, status=PremiseStatus.INVALIDATED)
-    assert p.confidence is None
-    assert p.status == PremiseStatus.INVALIDATED
