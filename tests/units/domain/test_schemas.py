@@ -4,7 +4,7 @@ from uuid import uuid4
 import pytest
 from pydantic import ValidationError
 
-from factclash.domain.schemas import (
+from factclash.analyzer.schemas import (
     Fact,
     FactSensitivity,
     FactStatus,
