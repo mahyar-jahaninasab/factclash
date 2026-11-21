@@ -11,8 +11,9 @@
 - **API:** a FastAPI app with one endpoint, `POST /api/v1/contradictions/nlp`. It validates the request (context blocks with their sources) and returns an analysis per block.
 - **Analyzer:** `NLPAnalyzer` sits behind the abstract `ContradictionAnalyzer` and an analyzer registry. It returns a fixed answer (`CONTRARY`, confidence 0.999). No detection runs yet.
 - **Domain model in code:** `Source` (with a reliability score), `Fact` (subject, statement, scope, validity window, evidence, fingerprint), `Evidence`, `Hypothesis`, `Premise` and a fact status history, following [reasoning.md](../domain-model/entities/reasoning.md).
-- **In progress on `feature/nlp`:** the entities moved to `analyzer/`, spaCy was added, and `services/analyzer/preprocessor.py` explores noun phrases, numbers and subjects but is not wired into the API yet. `analyzer/router.py` is started.
+- **In progress on `feature/nlp`:** the entities moved to `analyzer/`, spaCy was added, and `services/analyzer/preprocessor.py` explores noun phrases, numbers and subjects but is not wired into the API yet.
 - **Tooling:** uv, ruff and ty in pre-commit, pytest unit and integration tests.
+- **Code layout:** the target layout, and how today's code moves into it, is in [overview.md](../solution-architecture-documents/overview.md).
 
 ## 2. What FactClash is
 
@@ -49,7 +50,6 @@ It works in four stages. Each stage ships as its own release, with its own numbe
 - A tier is added only when the numbers show the tier below fails on a slice large enough to matter. The first one built is the clash-type classifier, because the judge's decisions give it clean labels.
 - Success means the same accuracy with lower cost per 1,000 requests and lower latency. The share of cases each tier handles is reported over time. Small fine-tuned models already do hallucination detection at a fraction of an LLM judge's cost [6][7][9].
 
-
 ### 2.5 Measure
 
 Every release reports its numbers in the README: detection precision, recall and F1 on public benchmarks; agreement with human labels for resolution; p50 and p95 latency; cost per 1,000 requests; and, from stage 4 on, the small model's learning curve against the judge.
@@ -71,6 +71,7 @@ A first search (2026-11-21) found no packaged open-source tool that does all thr
 
 | # | When this is done, the code… | Size | Ticket |
 | --- | --- | --- | --- |
+| 0 | sits in the layer layout from [overview.md](../solution-architecture-documents/overview.md), with no change in behaviour and all tests green | S | CD-37 |
 | 1 | turns each passage of a request into claims (what it is about, what it says, any value, its source) with spaCy rules, tested on the spec examples | M | CD-30 |
 | 2 | pairs only the claims about the same thing, instead of every claim with every other | S | CD-31 |
 | 3 | flags quantity clashes ("3 replicas" vs "5 replicas") with a score | M | CD-9 |
@@ -85,7 +86,7 @@ LLM judge with tools (CD-23) that survives LLM failures (CD-25); contradiction v
 
 ### v0.3.0 Remember
 
-Model and domain on each request (CD-18), verified-fact graph in Neo4j (CD-32), retrieval over HTTP and MCP (CD-24), GraphRAG demo client with before-and-after numbers (CD-33).
+Model and domain on each request (CD-18), domain entities that the stock spaCy model misses (CD-36), verified-fact graph in Neo4j (CD-32), retrieval over HTTP and MCP (CD-24), GraphRAG demo client with before-and-after numbers (CD-33).
 
 ### v0.4.0 Learn
 
