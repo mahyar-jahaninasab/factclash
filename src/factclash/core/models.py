@@ -7,7 +7,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field, HttpUrl, model_validator
 
-from factclash.domain.helpers import _normalize_text, _utc_iso
+from factclash.core.helpers import _normalize_text, _utc_iso
 
 
 class SourceType(Enum):

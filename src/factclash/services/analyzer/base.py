@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 
-from factclash.entrypoints.schemas import (
+from factclash.api.schemas import (
     Analyzer,
     ContextBlockCollection,
     ContradictionAnalysisCollection,

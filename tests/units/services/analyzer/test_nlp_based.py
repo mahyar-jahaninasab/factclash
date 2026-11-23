@@ -1,5 +1,5 @@
 import pytest
-from factclash.entrypoints.schemas import ContradictionType
+from factclash.api.schemas import ContradictionType
 from factclash.services.analyzer.nlp_based import NLPAnalyzer
 
 
