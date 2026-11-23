@@ -3,7 +3,7 @@ from uuid import UUID, uuid4
 import pytest
 from pydantic_core import ValidationError
 
-from factclash.contradictions.schemas import ContextBlock
+from factclash.api.schemas import ContextBlock
 
 
 def test_accept_prompt_fields():

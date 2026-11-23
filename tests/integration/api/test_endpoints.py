@@ -1,7 +1,7 @@
 from fastapi import status
 from fastapi.testclient import TestClient
 
-from factclash.app.main import app
+from factclash.api.main import app
 
 client = TestClient(app)
 
