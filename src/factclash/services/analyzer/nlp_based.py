@@ -1,4 +1,4 @@
-from factclash.contradictions.schemas import (
+from factclash.entrypoints.schemas import (
     Analyzer,
     ContextBlockCollection,
     ContradictionAnalysis,

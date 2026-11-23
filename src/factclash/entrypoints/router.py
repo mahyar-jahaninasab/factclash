@@ -3,8 +3,8 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, status
 
-from factclash.contradictions.dependencies import get_nlp_analyzer_agent
-from factclash.contradictions.schemas import (
+from factclash.entrypoints.dependencies import get_nlp_analyzer_agent
+from factclash.entrypoints.schemas import (
     ContextBlockCollection,
     ContradictionAnalysisCollection,
 )

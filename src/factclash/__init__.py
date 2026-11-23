@@ -2,4 +2,6 @@ import uvicorn
 
 
 def main() -> None:
-    uvicorn.run("factclash.app.main:app", host="0.0.0.0", port=8010, reload=True)
+    uvicorn.run(
+        "factclash.entrypoints.main:app", host="0.0.0.0", port=8010, reload=True
+    )

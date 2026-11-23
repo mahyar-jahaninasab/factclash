@@ -1,6 +1,6 @@
 from fastapi import APIRouter, FastAPI
 
-from factclash.contradictions import router as contradictions
+from factclash.entrypoints import router as contradictions
 
 app = FastAPI()
 
