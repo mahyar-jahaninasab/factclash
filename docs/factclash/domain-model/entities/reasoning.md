@@ -56,7 +56,6 @@ A Fact holds only within its `scope` and validity period. A high confidence scor
 | --- | --- | --- |
 | id | Unique ID | Unique identifier |
 | source_id | Reference to Source | Where it came from |
-| evidence_type | Category | `document`, `observation`, `measurement`, `record`,  `external_assertion` |
 | content | Struct / Text | The evidence payload itself |
 | observed_at | DateTime / Null | When the evidence was produced |
 | collected_at | DateTime | When the system received it |
@@ -67,7 +66,7 @@ A Fact holds only within its `scope` and validity period. A high confidence scor
 | --- | --- | --- |
 | id | Unique ID | Unique identifier |
 | source_type | Category | `RAG`, `LLM`, `external`, `human` |
-| name | Text | Display name |
+| subject | Text | The subject of the evidence |
 | reliability | Number / Null | Assessed reliability, 0–1 |
 | uri | URL / Null | Location of the original source |
 
@@ -199,11 +198,6 @@ Verification decides what a Hypothesis becomes:
 | scope | Struct | Context in which it would hold |
 | sensitivity | Category | Access classification |
 | confidence | Number / Null | Current internal estimate, 0–1. Used for ranking, not for verification |
-| supporting_fact_ids | List of references to Fact | Facts that support it |
-| contradicting_fact_ids | List of references to Fact | Facts that contradict it |
-| fact_id | Reference to Fact / Null | The Fact created when it was confirmed |
-| premise_id | Reference to Premise / Null | The Premise created when it was adopted as one |
-| contradicting_premise_ids | List of references to Premise | Premises it contradicts, recorded when it is checked on its way to becoming a Premise |
 | status | Category | `proposed`, `confirmed`, `adopted`, `refuted`, `abandoned` |
 | created_at | DateTime | Creation timestamp |
 | created_by | Reference to User / Agent / System | Who proposed it |
@@ -288,10 +282,9 @@ A Premise never becomes a Fact. To establish it as true, propose it as a Hypothe
 | statement | Text | The assumed proposition. Immutable |
 | scope | Struct | Context in which it is assumed |
 | sensitivity | Category | Access classification |
-| rationale | Text / Null | Why it is assumed |
 | hypothesis_id | Reference to Hypothesis / Null | The Hypothesis it came from, if any |
 | status | Category | `active`, `invalidated`, `withdrawn` |
-| invalidated_by_fact_id | Reference to Fact / Null | The accepted Fact that contradicted it |
+| invalidated_by_fact_id | Reference to Premise / Null | The accepted Premises that contradicted it |
 | created_at | DateTime | Creation timestamp |
 | created_by | Reference to User / Agent / System | Who adopted it |
 
