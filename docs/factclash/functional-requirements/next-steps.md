@@ -2,7 +2,7 @@
 
 | Field | Value |
 | --- | --- |
-| Date | 2026-11-21 |
+| Date | 2026-11-21, updated 2026-11-25 |
 | Author(s) | mahyar |
 | Status | Draft |
 
@@ -11,9 +11,9 @@
 - **API:** a FastAPI app with one endpoint, `POST /api/v1/contradictions/nlp`. It validates the request (context blocks with their sources) and returns an analysis per block.
 - **Analyzer:** `NLPAnalyzer` sits behind the abstract `ContradictionAnalyzer` and an analyzer registry. It returns a fixed answer (`CONTRARY`, confidence 0.999). No detection runs yet.
 - **Domain model in code:** `Source` (with a reliability score), `Fact` (subject, statement, scope, validity window, evidence, fingerprint), `Evidence`, `Hypothesis`, `Premise` and a fact status history, following [reasoning.md](../domain-model/entities/reasoning.md).
-- **In progress on `feature/nlp`:** the entities moved to `analyzer/`, spaCy was added, and `services/analyzer/preprocessor.py` explores noun phrases, numbers and subjects but is not wired into the API yet.
+- **spaCy:** added. `adapters/claim_extraction/spacy_extractor.py` explores noun phrases, numbers and subjects but is not wired into the API yet. `api/nlp_model.py` loads the model once per process.
 - **Tooling:** uv, ruff and ty in pre-commit, pytest unit and integration tests.
-- **Code layout:** the target layout, and how today's code moves into it, is in [overview.md](../solution-architecture-documents/overview.md).
+- **Code layout:** since 2026-11-24 (CD-37) the code sits in the layer layout of [overview.md](../solution-architecture-documents/overview.md): `core/`, `services/`, `adapters/`, `api/`.
 
 ## 2. What FactClash is
 
@@ -24,7 +24,10 @@ It works in four stages. Each stage ships as its own release, with its own numbe
 ### 2.1 Watch: detect clashes
 
 - **In:** the context about to be sent to an LLM, as passages plus their source details.
-- **Steps:** turn each passage into claims (what it is about, what it says, any value) with spaCy rules → pair only the claims that talk about the same thing → screen each pair with rules (quantities, simple strict contradictions) → flag the pairs that clash.
+- **Steps:** check each sentence of each passage and skip the ones the rules can't read reliably (fragments, no subject, a pronoun with nothing earlier in the passage to point to, text cut mid-sentence, noisy text), recording why → turn the rest into claims (what it is about, what it says, any value, whether it is negated, and the condition of "if X then Y" claims) with spaCy rules → pair only the claims that talk about the same thing → screen each pair with rules (quantities, simple strict contradictions) → flag the pairs that clash.
+- **What a claim is:** the smallest piece of text that can be true or false on its own and that another text could contradict. It can be plain ("The cluster runs 3 replicas.") or conditional ("If traffic spikes, the cluster scales to 10."). Sentences that are not claims (greetings, questions, commands, hedges such as "might be running") stay with a claim as supporting text. A claim is not yet a Hypothesis: a Hypothesis is made from a claim when a clash is flagged.
+- **Same thing, by meaning:** pairing decides whether two claims are about the same thing by meaning, not by exact wording. It must still keep apart words that look alike but mean different things in a domain ("shall" / "should", "flammable" / "combustible").
+- **Why check sentences first:** FactClash gets passages, not whole documents, cut by someone else's retriever, parser or scraper. A wrong claim creates false clashes, so a sentence the rules can't read gives no claim, and the skip counts show when a costlier fallback is worth it.
 - **Why pair first:** checking every passage against every other grows quadratically. 20 passages already make 190 pairs [2].
 - **Out:** the API answers without the clash. Each flagged clash sets the flag on its Hypothesis and leaves one monitor record: the two claims, their sources, the clash type, the score and how long each stage took.
 
@@ -72,8 +75,9 @@ A first search (2026-11-21) found no packaged open-source tool that does all thr
 | # | When this is done, the code… | Size | Ticket |
 | --- | --- | --- | --- |
 | 0 | sits in the layer layout from [overview.md](../solution-architecture-documents/overview.md), with no change in behaviour and all tests green | S | CD-37 |
-| 1 | turns each passage of a request into claims (what it is about, what it says, any value, its source) with spaCy rules, tested on the spec examples | M | CD-30 |
-| 2 | pairs only the claims about the same thing, instead of every claim with every other | S | CD-31 |
+| 1 | turns each passage of a request into claims (what it is about, what it says, any value, negation, the condition of if-then claims, the supporting sentences around them, its source) with spaCy rules, tested on the spec examples | M | CD-30 |
+| 1b | skips the sentences the rules can't read reliably and says why, so the skip rate per reason can be counted | S | CD-38 |
+| 2 | pairs only the claims about the same thing, judged by meaning rather than exact wording, instead of every claim with every other | M | CD-31 |
 | 3 | flags quantity clashes ("3 replicas" vs "5 replicas") with a score | M | CD-9 |
 | 4 | flags strict contradictions ("running" vs "not running") with rules and a score | M | CD-4 |
 | 5 | runs the screener behind the endpoint, sets the flag on the Hypothesis and writes one monitor record per clash, with per-stage latency | M | CD-21, CD-22 |
@@ -98,16 +102,19 @@ LLM judge, NLI model, PostgreSQL store, Neo4j graph, MCP, online learning, authe
 
 ## 6. Decisions and open questions
 
-### Decisions (2026-11-21)
+### Decisions (2026-11-21, 3 updated and 9–11 added 2026-11-25)
 
 1. **Release order:** Watch ships first. The judge and the store come in the next release.
 2. **Models:** a cascade from cheap to expensive: rules, small task models (spaCy NER, a clash-type classifier), a small LLM for reasoning cases, and the large LLM judge. The smaller models learn from the judge's decisions. A tier is added only when measurements show the one below falls short.
-3. **Claim extraction:** spaCy rules first, then the small model. The LLM monitors and makes the final call, and its decisions train the small model.
+3. **Claim extraction:** spaCy rules first, then the small model. Each sentence is checked before extraction; sentences the rules can't read reliably are skipped with a reason and counted. An LLM fallback for skipped sentences (restore punctuation and grammar, then parse again; or ask one multiple-choice question about the ambiguous part) comes with the judge in v0.2.0, if the skip counts show it is needed. The LLM monitors and makes the final call, and its decisions train the small model.
 4. **Strict screener:** rules for simple cases first, an NLI model next.
 5. **Evaluation:** well-known public benchmarks, chosen after research, plus the small model's learning curve over time.
 6. **Storage:** PostgreSQL with pgvector for context, facts, premises, hypotheses and similarity retrieval. In parallel, a GraphRAG over verified facts in Neo4j.
 7. **Source reliability:** set by the caller from data they already have, such as their retrieval system's score. FactClash uses it to weight its decisions.
 8. **GraphRAG demo client:** in scope.
+9. **Claims:** plain and conditional claims both in v0.1.0. A claim records negation. Claim is its own type; a Hypothesis is made from a claim when a clash is flagged.
+10. **Same subject:** decided by meaning in v0.1.0 (CD-31), not by text rules, because text rules have too many edge cases.
+11. **Sentence checks:** the checks that need no number (root is not a verb, no subject, pronoun subject with nothing before it, cut mid-sentence, words the parser couldn't classify) and the ones with a threshold (sentence length, share of lowercase letters, out-of-vocabulary rate). Thresholds come from measurement, never from a guess.
 
 ### Still open
 
@@ -117,6 +124,11 @@ LLM judge, NLI model, PostgreSQL store, Neo4j graph, MCP, online learning, authe
 - Callers report reliability on different scales. How are their scores made comparable?
 - When is the small model confident enough to take a pair without the LLM?
 - Which tiers earn their place: does the classifier leave enough hard cases to justify a small LLM?
+- Gate thresholds (sentence length, share of lowercase letters, unclassified words): CD-38's starting values come from a handful of passages. What are they on real data (CD-10's dataset)?
+- The out-of-vocabulary check needs word vectors, and the small spaCy model has none. Does it wait for the model choice below?
+- Which model for matching claims by meaning (CD-31)? The small spaCy model has no word vectors; medium, large or a sentence-embedding model need a careful measurement on pairs that look alike but must stay apart ("shall" / "should", "flammable" / "combustible").
+- Beam-search NER: worth configuring when we train our own NER (CD-36, v0.3.0), so the gate can use entity confidence?
+- Pronoun subjects ("It must be renewed every 90 days."): a single passage can't say what "it" is, so v0.1.0 skips them. Could a request carry the passage before it?
 
 ## 7. References
 

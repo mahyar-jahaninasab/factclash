@@ -29,7 +29,7 @@ src/factclash/
 
 | Package | Holds | First used |
 | --- | --- | --- |
-| `core/` | Entities and value types (Source, Fact, Evidence, Hypothesis, Premise, status records, Claim, Clash); business rules that need no outside library (pairing claims about the same thing, the rule-based screeners); and the interfaces the outer layers implement: claim extractor, screener, monitor, store, judge | v0.1.0 |
+| `core/` | Entities and value types (Source, Fact, Evidence, Hypothesis, Premise, status records, Claim, Clash); business rules that need no outside library (the rule-based screeners; pairing, apart from its meaning check, see §3); and the interfaces the outer layers implement: claim extractor, screener, monitor, store, judge | v0.1.0 |
 | `services/` | Use cases, one per thing FactClash does: check a context (v0.1.0), resolve unsure pairs (v0.2.0), store and retrieve facts (v0.2.0, v0.3.0), train a cheaper tier (v0.4.0). Each receives its adapters through the interfaces in `core/`. | v0.1.0 |
 | `adapters/` | Implementations that talk to the outside world: spaCy claim extractor, JSON log monitor, NLI screener (v0.2.0), LLM judge client (v0.2.0), PostgreSQL store with pgvector (v0.2.0), Neo4j fact graph (v0.3.0), model training (v0.4.0) | v0.1.0 |
 | `api/` | The FastAPI app, routes, the dependencies that choose which adapters to plug in, and the API's request and response schemas | v0.1.0 |
@@ -49,8 +49,8 @@ src/factclash/
 | --- | --- | --- | --- | --- |
 | API | `api/` | Validates the request, converts it to domain objects, calls the use case, answers the caller | HTTP request | HTTP response without the clash |
 | Check-a-context use case | `services/` | Runs extraction, pairing, screening and monitoring for one request; from v0.2.0 also sends unsure pairs to the judge | Domain context | Hypotheses with flags |
-| Claim extractor | interface in `core/`, spaCy version in `adapters/` | Turns each passage into claims | Passages with sources | Claims |
-| Pairing | `core/` | Pairs only the claims about the same thing | Claims | Candidate pairs |
+| Claim extractor | interface in `core/`, spaCy version in `adapters/` | Checks each sentence, skips the ones its rules can't read reliably with a reason, and turns the rest into claims (plain and conditional); from v0.2.0, skipped sentences can go to an LLM fallback | Passages with sources | Claims, skipped sentences with reasons |
+| Pairing | `core/`; the meaning check needs a model, and where that model sits is decided in CD-31 | Pairs only the claims about the same thing, judged by meaning rather than exact wording | Claims | Candidate pairs |
 | Screeners | interface and rule-based screeners in `core/`; NLI screener in `adapters/` (v0.2.0) | One strategy per kind of clash, all behind one interface. Each pair goes through each screener. | Candidate pairs | Clash type and score per pair |
 | Monitor | interface in `core/`, JSON log version in `adapters/` | Records each flagged clash | Flagged clash | One JSON log line |
 | Judge | interface in `core/`, LLM client in `adapters/` (v0.2.0) | Makes the final call on pairs the screeners are unsure about | Unsure pairs | Decision with a reason |
@@ -64,7 +64,7 @@ Two retrieved passages: source A says "The cluster runs 3 replicas." and source 
 
 1. The caller sends both passages with their sources to the API (today `POST /api/v1/contradictions/nlp`).
 2. `api/` validates the request against the API schemas, converts it into domain objects, builds the adapters (spaCy claim extractor, JSON log monitor) and calls the check-a-context use case in `services/`.
-3. The use case asks the claim extractor for claims and gets two: cluster, replicas, 3, from A; and cluster, replicas, 5, from B.
+3. The use case asks the claim extractor for claims. Both sentences pass the sentence check, so nothing is skipped, and it returns two claims: cluster, replicas, 3, from A; and cluster, replicas, 5, from B.
 4. Pairing in `core/` sees the same subject and makes one candidate pair.
 5. The quantity screener sees the same subject and attribute with different numbers and flags a clash with a score. The strict screener has nothing to say.
 6. The clash's Hypothesis gets its flag. The use case hands the clash to the monitor, which writes one JSON log line with both claims, their sources, the clash type, the score and the time each step took.
