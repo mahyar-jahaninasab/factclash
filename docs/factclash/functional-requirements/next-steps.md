@@ -2,7 +2,7 @@
 
 | Field | Value |
 | --- | --- |
-| Date | 2026-11-21, updated 2026-11-25 |
+| Date | 2026-11-21, updated 2026-11-25 and 2026-11-28 |
 | Author(s) | mahyar |
 | Status | Draft |
 
@@ -11,7 +11,7 @@
 - **API:** a FastAPI app with one endpoint, `POST /api/v1/contradictions/nlp`. It validates the request (context blocks with their sources) and returns an analysis per block.
 - **Analyzer:** `NLPAnalyzer` sits behind the abstract `ContradictionAnalyzer` and an analyzer registry. It returns a fixed answer (`CONTRARY`, confidence 0.999). No detection runs yet.
 - **Domain model in code:** `Source` (with a reliability score), `Fact` (subject, statement, scope, validity window, evidence, fingerprint), `Evidence`, `Hypothesis`, `Premise` and a fact status history, following [reasoning.md](../domain-model/entities/reasoning.md).
-- **spaCy:** added. `adapters/claim_extraction/spacy_extractor.py` explores noun phrases, numbers and subjects but is not wired into the API yet. `api/nlp_model.py` loads the model once per process.
+- **spaCy:** added, on `en_core_web_md` (switched from `en_core_web_sm` on 2026-11-28 for its word vectors). `adapters/claim_extraction/spacy_extractor.py` explores noun phrases, numbers and subjects but is not wired into the API yet. `api/nlp_model.py` loads the model once per process with `functools.lru_cache`.
 - **Tooling:** uv, ruff and ty in pre-commit, pytest unit and integration tests.
 - **Code layout:** since 2026-11-24 (CD-37) the code sits in the layer layout of [overview.md](../solution-architecture-documents/overview.md): `core/`, `services/`, `adapters/`, `api/`.
 
@@ -102,7 +102,7 @@ LLM judge, NLI model, PostgreSQL store, Neo4j graph, MCP, online learning, authe
 
 ## 6. Decisions and open questions
 
-### Decisions (2026-11-21, 3 updated and 9–11 added 2026-11-25)
+### Decisions (2026-11-21, 3 updated and 9–11 added 2026-11-25, 12 added 2026-11-28)
 
 1. **Release order:** Watch ships first. The judge and the store come in the next release.
 2. **Models:** a cascade from cheap to expensive: rules, small task models (spaCy NER, a clash-type classifier), a small LLM for reasoning cases, and the large LLM judge. The smaller models learn from the judge's decisions. A tier is added only when measurements show the one below falls short.
@@ -115,6 +115,7 @@ LLM judge, NLI model, PostgreSQL store, Neo4j graph, MCP, online learning, authe
 9. **Claims:** plain and conditional claims both in v0.1.0. A claim records negation. Claim is its own type; a Hypothesis is made from a claim when a clash is flagged.
 10. **Same subject:** decided by meaning in v0.1.0 (CD-31), not by text rules, because text rules have too many edge cases.
 11. **Sentence checks:** the checks that need no number (root is not a verb, no subject, pronoun subject with nothing before it, cut mid-sentence, words the parser couldn't classify) and the ones with a threshold (sentence length, share of lowercase letters, out-of-vocabulary rate). Thresholds come from measurement, never from a guess.
+12. **spaCy model:** `en_core_web_md` from CD-30 on, replacing `en_core_web_sm`, because `sm` ships no word vectors and the claim tests use a similarity check. Whether `md`'s vectors are good enough for matching claims by meaning is still measured in CD-31.
 
 ### Still open
 
@@ -125,8 +126,8 @@ LLM judge, NLI model, PostgreSQL store, Neo4j graph, MCP, online learning, authe
 - When is the small model confident enough to take a pair without the LLM?
 - Which tiers earn their place: does the classifier leave enough hard cases to justify a small LLM?
 - Gate thresholds (sentence length, share of lowercase letters, unclassified words): CD-38's starting values come from a handful of passages. What are they on real data (CD-10's dataset)?
-- The out-of-vocabulary check needs word vectors, and the small spaCy model has none. Does it wait for the model choice below?
-- Which model for matching claims by meaning (CD-31)? The small spaCy model has no word vectors; medium, large or a sentence-embedding model need a careful measurement on pairs that look alike but must stay apart ("shall" / "should", "flammable" / "combustible").
+- The out-of-vocabulary check needs word vectors, which `en_core_web_md` has (decision 12). Which out-of-vocabulary rate counts as too high? (CD-38's measurement.)
+- Is `en_core_web_md` good enough for matching claims by meaning (CD-31), or does it need the large model or a sentence-embedding model? To be measured on pairs that look alike but must stay apart ("shall" / "should", "flammable" / "combustible", "is running" / "is not running").
 - Beam-search NER: worth configuring when we train our own NER (CD-36, v0.3.0), so the gate can use entity confidence?
 - Pronoun subjects ("It must be renewed every 90 days."): a single passage can't say what "it" is, so v0.1.0 skips them. Could a request carry the passage before it?
 
