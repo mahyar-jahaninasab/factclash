@@ -1,7 +1,7 @@
 import pytest
 import spacy
 
-from factclash.core.claims import Claim
+from factclash.adapters.claim_extraction.spacy_extractor import SpacyClaimExtractor
 
 
 @pytest.fixture(scope="module")
@@ -27,7 +27,7 @@ def test_claim_inheritence_of_id_source(nlp):
         "If traffic spikes, the cluster scales to 10.",
     ]
 
-    claim_break = Claim()
+    claim_break = SpacyClaimExtractor(nlp)
     claims = claim_break.break_into_claims(passages)
     actual_claims = [nlp(text) for text in claims]
     extracted_claims = [nlp(text) for text in expected_claims]
