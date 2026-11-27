@@ -1,4 +1,5 @@
 import logging
+import spacy
 
 from factclash.services.analyzer.nlp_based import NLPAnalyzer
 from functools import lru_cache
@@ -10,3 +11,8 @@ _logger = logging.getLogger(__name__)
 def get_nlp_analyzer_agent():
     _logger.info("NLP agent is initialized to analyze for contradictions")
     return NLPAnalyzer()
+
+@lru_cache(1)
+def get_nlp_analyzer_model():
+    _logger.info("NLP agent is initialized to analyze for contradictions")
+    return spacy.load("en_core_web_md")
